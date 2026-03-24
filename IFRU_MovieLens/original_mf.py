@@ -11,8 +11,6 @@ import random
 from Model.MF import MF
 from utility.compute import *
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Using device:", device)
 
 class model_hyparameters(object):
     def __init__(self):
@@ -90,7 +88,7 @@ def main(config_args):
     config['n_users'] = data_generator.n_users
     config['n_items'] = data_generator.n_items
 
-    model = MF(data_config=config, args=args).to(device)
+    model = MF(data_config=config, args=args).cuda()
     opt = torch.optim.Adam(model.parameters(), lr=model.lr)
 
     best_epoch = 0
@@ -103,7 +101,7 @@ def main(config_args):
         t1 = time()
         loss, bce_loss, reg_loss = 0., 0., 0.
         for batch_data in data_generator.batch_generator():
-            users, items, labels = batch_data[:, 0].to(device).long(), batch_data[:, 1].to(device).long(), batch_data[:, 2].to(device).float()
+            users, items, labels = batch_data[:, 0].cuda().long(), batch_data[:, 1].cuda().long(), batch_data[:, 2].cuda().float()
             batch_bce_loss, batch_reg_loss, batch_loss = model.train_one_batch_ouput_bce(users, items, labels, opt)
             loss += batch_loss
             bce_loss += batch_bce_loss

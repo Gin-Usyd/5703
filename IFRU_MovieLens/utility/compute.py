@@ -3,7 +3,6 @@ import scipy.sparse as sp
 import torch
 from sklearn.metrics import roc_auc_score
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def compute_neighbor(data_generator, k_hop=0):
     assert k_hop == 0
@@ -37,8 +36,8 @@ def get_eval_mask(data_generator):
     test_data = data_generator.test[['user', 'item', 'label']].values
 
     nei_users, nei_items = compute_neighbor(data_generator)
-    nei_users = torch.from_numpy(nei_users).to(device).long()
-    nei_items = torch.from_numpy(nei_items).to(device).long()
+    nei_users = torch.from_numpy(nei_users).cuda().long()
+    nei_items = torch.from_numpy(nei_items).cuda().long()
 
     # mask or
     mask_1 = np.zeros(valid_data.shape[0])
@@ -74,8 +73,8 @@ def get_eval_result(data_generator, model, mask):
     test_data = data_generator.test[['user', 'item', 'label']].values
 
     nei_users, nei_items = compute_neighbor(data_generator)
-    nei_users = torch.from_numpy(nei_users).to(device).long()
-    nei_items = torch.from_numpy(nei_items).to(device).long()
+    nei_users = torch.from_numpy(nei_users).cuda().long()
+    nei_items = torch.from_numpy(nei_items).cuda().long()
 
     mask_1, mask_2, mask_3, mask_4 = mask[0], mask[1], mask[2], mask[3]
 
