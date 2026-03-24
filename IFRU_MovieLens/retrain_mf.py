@@ -123,6 +123,8 @@ def main(config_args):
             best_epoch = epoch
             best_valid_auc = valid_auc
             best_test_auc = test_auc
+
+            os.makedirs("./Weights/MF", exist_ok=True)
             torch.save(model.state_dict(), './Weights/MF/' + save_name + "m.pth")
             print("saving the best model")
 

@@ -20,15 +20,16 @@ class model_hyparameters(object):
         self.embed_size = 48
         self.batch_size = 2048
         #self.epoch = 5000
-        self.epoch = 20
+        self.epoch = 5
         self.data_path = './data/IFRU/Data/Process/'
         self.dataset = 'MovieLens'
         self.attack = '0.02'
         self.k_hop = 0
         self.data_type = 'full'
         #self.if_epoch = 5000
-        self.if_epoch = 20
-        self.if_lr = 1e4
+        self.if_epoch = 5
+        #self.if_lr = 1e4
+        self.if_lr = 100
         self.if_init_std = 0
         self.seed = 1024
         self.lr = 1e-3
@@ -140,6 +141,8 @@ class influence_unlearn(nn.Module):
                     best_epoch = if_ep
                     best_test_auc = test_auc
                     print("save best model")
+
+                    os.makedirs(os.path.dirname(self.save_name), exist_ok=True)
                     torch.save(model.state_dict(), self.save_name)
                     not_change = 0
                     res += e_time-s_time
@@ -250,15 +253,16 @@ if __name__=='__main__':
     config_args['embed_size'] = 64
     config_args['batch_size'] = 2048
     #config_args['epoch'] = 5000
-    config_args['epoch'] = 20
+    config_args['epoch'] = 5
     config_args['data_path'] = './data/IFRU/Data/Process/'
     config_args['dataset'] = 'MovieLens'
     config_args['attack'] = '0.02'
     config_args['k_hop'] = 0
     config_args['data_type'] = 'full'
     #config_args['if_epoch'] = 5000
-    config_args['if_epoch'] = 20
-    config_args['if_lr'] = 2e4
+    config_args['if_epoch'] = 5
+    #config_args['if_lr'] = 2e4
+    config_args['if_lr'] = 100
     config_args['if_init_std'] = 0
     config_args['seed'] = 1024
     config_args['lr'] = 1e-4

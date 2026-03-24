@@ -140,6 +140,8 @@ class influence_unlearn(nn.Module):
                     best_epoch = if_ep
                     best_test_auc = test_auc
                     print("save best model")
+                    
+                    os.makedirs(os.path.dirname(self.save_name), exist_ok=True)
                     torch.save(model.state_dict(), self.save_name)
                     not_change = 0
                     res += e_time-s_time
