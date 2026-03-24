@@ -51,7 +51,7 @@ class influence_unlearn(nn.Module):
         self.p = None
 
     def compute_hessian_with_test(self, model=None, data_generator=None):
-        nei_users, nei_items = compute_neighbor(data_generator, 0)
+        nei_users, nei_items = compute_neighbor(data_generator)
         nei_users = torch.from_numpy(nei_users).cuda().long()
         nei_items = torch.from_numpy(nei_items).cuda().long()
 
@@ -150,7 +150,7 @@ class influence_unlearn(nn.Module):
                 break
             print('time_cost:',time.time()-t0)
 
-    def compute_neighbor_influence_clip(self, data_generator, k_hop=1):
+    def compute_neighbor_influence_clip(self, data_generator, k_hop=0):
         train_data = data_generator.train.values.copy()
         matrix_size = data_generator.n_users + data_generator.n_items
         train_data[:,1] += data_generator.n_users
@@ -178,22 +178,8 @@ class influence_unlearn(nn.Module):
         neighbor_set_list = [neighbor_set]
         pre_neighbor_set = neighbor_set
         print("neighbor_set size:", len(neighbor_set))
-
-        for i in range(k_hop):
-            neighbor_set = dict()
-            existing_node = list(pre_neighbor_set.keys())
-            nonzero_raw, nonzero_col = train_matrix[existing_node].nonzero()
-            for kk in range(nonzero_raw.shape[0]):
-                out_node =  existing_node[nonzero_raw[kk]]
-                in_node = nonzero_col[kk]
-                try:
-                    neighbor_set[in_node] += pre_neighbor_set[out_node] *1.0/degree[in_node]
-                except:
-                    neighbor_set[in_node] = pre_neighbor_set[out_node] *1.0/degree[in_node]
-            pre_neighbor_set = neighbor_set
-            neighbor_set_list.append(neighbor_set)
         
-        nei_dict = neighbor_set_list[1].copy()
+        nei_dict = neighbor_set_list[0].copy()
 
         nei_weights = np.array(list(nei_dict.values()))
         nei_nodes = np.array(list(nei_dict.keys()))
@@ -203,15 +189,13 @@ class influence_unlearn(nn.Module):
         select_index = np.where(nei_weights>0)
         neighbor_set = nei_nodes[select_index]
         print("neighbors before filtering:",nei_nodes.shape,"after filtering:", neighbor_set.shape)
-
-        all_nei_ui = np.concatenate([unlearn_ui.squeeze(),neighbor_set.squeeze()])
         all_nei_ui = neighbor_set.squeeze()
         all_nei_ui = np.unique(all_nei_ui)
         print("total influenced users+items:",all_nei_ui.shape)
         return all_nei_ui[np.where(all_nei_ui<data_generator.n_users)], all_nei_ui[np.where(all_nei_ui>=data_generator.n_users)] - data_generator.n_users
 
 
-def main(config_args):
+def main(config_args=None):
     args = model_hyparameters()
     assert config_args is not None
     args.reset(config_args)
@@ -225,13 +209,12 @@ def main(config_args):
     
     data_generator = Data_for_MF(data_path=args.data_path + args.dataset + '/' + args.attack, batch_size=args.batch_size)
     data_generator.set_train_mode(args.data_type)
-    data_generator.print_statistics()
-
+    
     config = dict()
     config['n_users'] = data_generator.n_users
     config['n_items'] = data_generator.n_items
 
-    save_name = './Weights/MF/MF_lr-0.0001-embed_size-64-batch_size-2048-data_type-full-dataset-Amazon-attack-0.02-seed-1024-init_std-0.0001-m.pth'
+    save_name = './Weights/MF/MF_lr-0.0001-embed_size-64-batch_size-2048-data_type-full-dataset-MovieLens-attack-0.02-seed-1024-init_std-0.0001-m.pth'
     model = MF(data_config=config,args=args).cuda()
     model.load_state_dict(torch.load(save_name))
 
@@ -271,7 +254,7 @@ if __name__=='__main__':
     config_args['data_path'] = './data/IFRU/Data/Process/'
     config_args['dataset'] = 'MovieLens'
     config_args['attack'] = '0.02'
-    config_args['k_hop'] = 1
+    config_args['k_hop'] = 0
     config_args['data_type'] = 'full'
     #config_args['if_epoch'] = 5000
     config_args['if_epoch'] = 20
